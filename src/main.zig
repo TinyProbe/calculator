@@ -57,7 +57,7 @@ pub fn removeOverlapedFloatingPoint(str: []u8) usize {
   return l;
 }
 
-pub fn validation(formula: []u8) !void {
+pub fn validation(formula: []const u8) !void {
   // allow character check
   const allowChars = "()0123456789.+-*/";
   for (0 .. formula.len) |i| {
