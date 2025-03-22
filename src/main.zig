@@ -1,8 +1,15 @@
 const std = @import("std");
 
+var gpa = std.heap.GeneralPurposeAllocator(.{}) {}; 
+const allocator = gpa.allocator();
+const reader = std.io.getStdIn().reader();
+const writer = std.io.getStdOut().writer();
+const allowChars = "()0123456789.+-*/"; // validation
+const digits = "0123456789."; // calculate
+const operators = "+-*/"; // anywhere
+
 pub fn main() !void {
-  const reader = std.io.getStdIn().reader();
-  const writer = std.io.getStdOut().writer();
+  defer _ = gpa.deinit();
   var buffer: [1 << 16]u8 = undefined;
   var len: usize = try reader.readAll(&buffer);
 
@@ -40,7 +47,6 @@ pub fn removeWhitespace(str: []u8) usize {
 }
 
 pub fn removeOverlapedFloatingPoint(str: []u8) usize {
-  const operators = "+-*/";
   var b: bool = false;
   var l: usize = 0;
   var r: usize = 0;
@@ -59,7 +65,6 @@ pub fn removeOverlapedFloatingPoint(str: []u8) usize {
 
 pub fn validation(formula: []const u8) !void {
   // allow character check
-  const allowChars = "()0123456789.+-*/";
   for (0 .. formula.len) |i| {
     if (std.mem.indexOfScalar(u8, allowChars, formula[i]) == null) {
       return error.NotAllowedCharacterIncluded;
@@ -79,8 +84,6 @@ pub fn validation(formula: []const u8) !void {
   if (bracketStack != 0) { return error.NotExactlyMatchParentheses; }
 
   // formula check
-  const digits = "0123456789.";
-  const operators = "+-*/";
   for (1 .. formula.len) |i| {
     switch (formula[i - 1]) {
       '(' => if (formula[i] == ')' or
@@ -109,10 +112,6 @@ pub fn validation(formula: []const u8) !void {
 }
 
 pub fn calculate(formula: []const u8) !f64 {
-  var gpa = std.heap.GeneralPurposeAllocator(.{}) {}; defer _ = gpa.deinit();
-  const allocator = gpa.allocator();
-  const operators = "+-*/";
-
   // split elements
   var operands = std.ArrayList(f64).init(allocator); defer operands.deinit();
   var operators_ = std.ArrayList(u8).init(allocator); defer operators_.deinit();
