@@ -23,7 +23,8 @@ pub fn main() !void {
       \\
       \\or Linux/Mac:
       \\    ./Calculator
-      \\    <Formula><ctrl+D>
+      \\    <Formula>
+      \\    <ctrl+D>
       \\
       \\or Windows:
       \\    ./Calculator.exe
