@@ -18,15 +18,16 @@ pub fn main() !void {
   validation(buffer[0 .. len]) catch |e| {
     try writer.print(
       \\
-      \\usage:
+      \\Linux/Mac:
       \\    ./Calculator < formula.txt
-      \\
-      \\or Linux/Mac:
+      \\or
       \\    ./Calculator
       \\    <Formula>
       \\    <ctrl+D>
       \\
-      \\or Windows:
+      \\Windows:
+      \\    Get-Content formula.txt | ./Calculator.exe
+      \\or
       \\    ./Calculator.exe
       \\    <Formula><ctrl+Z><Ent>
       \\
