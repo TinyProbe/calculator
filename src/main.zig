@@ -2,14 +2,14 @@ const std = @import("std");
 
 var gpa = std.heap.GeneralPurposeAllocator(.{}) {}; 
 const allocator = gpa.allocator();
-const reader = std.io.getStdIn().reader();
-const writer = std.io.getStdOut().writer();
 const allowChars = "()0123456789.+-*/"; // validation
 const digits = "0123456789."; // calculate
 const operators = "+-*/"; // anywhere
 
 pub fn main() !void {
   defer _ = gpa.deinit();
+  const reader = std.io.getStdIn().reader();
+  const writer = std.io.getStdOut().writer();
   var buffer: [1 << 16]u8 = undefined;
   var len: usize = try reader.readAll(&buffer);
 
@@ -19,12 +19,15 @@ pub fn main() !void {
     try writer.print(
       \\
       \\usage:
-      \\
       \\    ./Calculator < formula.txt
-      \\or
+      \\
+      \\or Linux/Mac:
       \\    ./Calculator
-      \\    <Formula>
-      \\    <ctrl+D>
+      \\    <Formula><ctrl+D>
+      \\
+      \\or Windows:
+      \\    ./Calculator.exe
+      \\    <Formula><ctrl+Z><Ent>
       \\
       \\
       , .{},
