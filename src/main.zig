@@ -37,7 +37,7 @@ pub fn main() !void {
         );
         return e;
     };
-    try writer.print("{d}\n", .{try calculate(buffer[0 .. len])});
+    try writer.print("{d}\n", .{ try calculate(buffer[0 .. len]) });
 }
 
 pub fn removeWhitespace(str: []u8) usize {
