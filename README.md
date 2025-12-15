@@ -39,14 +39,12 @@ zig build
 빌드된 실행 파일에 큰따옴표로 묶인 하나의 수식 문자열을 인자로 전달하여
 실행합니다.
 
-실행 구문:
-
+- 실행 구문:
 ```bash
 ./zig-out/bin/Calculator "<Formula>"
 ```
 
-예시:
-
+- 예시:
 ```bash
 # 예시 1: 정수와 연산자
 ./zig-out/bin/Calculator "1 + 2 * 3 - 4"
