@@ -24,6 +24,7 @@ pub fn main() !void {
 
     try removeWhitespace(&buffer);
     try removeOverlapedFloatingPoint(&buffer);
+    if (buffer.items.len == 0) { return error.InvaildArguments; }
     validation(buffer.items) catch |e| {
         std.debug.print(
             \\
@@ -48,10 +49,10 @@ pub fn main() !void {
 pub fn removeWhitespace(str: *Str) !void {
     var s = str.items;
     var l: usize = 0;
-    var r = Rng(usize).init(0, s.len);
-    while (r.next()) |i| {
-        if (!std.ascii.isWhitespace(s[i])) {
-            s[l] = s[i];
+    var i = Rng(usize).init(0, s.len);
+    while (i.next()) |r| {
+        if (!std.ascii.isWhitespace(s[r])) {
+            s[l] = s[r];
             l += 1;
         }
     }
@@ -61,16 +62,16 @@ pub fn removeWhitespace(str: *Str) !void {
 pub fn removeOverlapedFloatingPoint(str: *Str) !void {
     var s = str.items;
     var l: usize = 0;
-    var r = Rng(usize).init(0, s.len);
+    var i = Rng(usize).init(0, s.len);
     var b: bool = false;
-    while (r.next()) |i| {
-        if (s[i] == '.') {
+    while (i.next()) |r| {
+        if (s[r] == '.') {
             if (b) { continue; }
             b = true;
-        } else if (std.mem.indexOfScalar(u8, Operators, s[i]) != null) {
+        } else if (std.mem.indexOfScalar(u8, Operators, s[r]) != null) {
             b = false;
         }
-        s[l] = s[i];
+        s[l] = s[r];
         l += 1;
     }
     try str.resize(l);
@@ -176,6 +177,7 @@ pub fn calculate(formula: []const u8) !f64 {
                 continue;
             },
         }
+        // low performance
         _ = try operands.remove(i + 1);
         _ = try operators.remove(i);
     }
@@ -191,6 +193,7 @@ pub fn calculate(formula: []const u8) !f64 {
                 continue;
             },
         }
+        // low performance
         _ = try operands.remove(i + 1);
         _ = try operators.remove(i);
     }
