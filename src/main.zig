@@ -1,78 +1,85 @@
 const std = @import("std");
+const zl = @import("zig_libraries");
+const Rng = zl.rng.Rng;
+const Vec = zl.vec.Vec;
+const Str = zl.str.Str;
+const print = zl.io.print;
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-const allocator = gpa.allocator();
-const allowChars = "()0123456789.+-*/"; // validation
-const digits = "0123456789."; // calculate
-const operators = "+-*/"; // anywhere
+var gpa = std.heap.GeneralPurposeAllocator(.{}) {};
+const Allocator = gpa.allocator();
+const AllowChars = "()0123456789.+-*/"; // validation
+const Digits = "0123456789."; // calculate
+const Operators = "+-*/"; // anywhere
 
 pub fn main() !void {
     defer if (gpa.deinit() == .leak) unreachable;
-    const reader = std.io.getStdIn().reader();
-    const writer = std.io.getStdOut().writer();
+    defer zl.io.cout.flush() catch unreachable;
 
-    var buffer: [1 << 20]u8 = undefined;
-    var len: usize = try reader.readAll(&buffer);
+    const Args = try std.process.argsAlloc(Allocator);
+    defer std.process.argsFree(Allocator, Args);
+    if (Args.len != 2) { return error.InvaildArguments; }
 
-    len = removeWhitespace(buffer[0 .. len]);
-    len = removeOverlapedFloatingPoint(buffer[0 .. len]);
-    validation(buffer[0 .. len]) catch |e| {
-        try writer.print(
+    var buffer = Str.init(Allocator); defer buffer.deinit();
+    try buffer.appendSlice(Args[Args.len - 1]);
+
+    try removeWhitespace(&buffer);
+    try removeOverlapedFloatingPoint(&buffer);
+    validation(buffer.items) catch |e| {
+        std.debug.print(
             \\
             \\Linux/Mac:
-            \\    ./Calculator < formula.txt
-            \\or
-            \\    ./Calculator
-            \\    <Formula>
-            \\    <ctrl+D>
+            \\    ./Calculator <Formula>
             \\
             \\Windows:
-            \\    Get-Content formula.txt | ./Calculator.exe
-            \\or
-            \\    ./Calculator.exe
-            \\    <Formula><ctrl+Z><Ent>
+            \\    ./Calculator.exe <Formula>
+            \\
+            \\Example:
+            \\    ./Calculator "((10 * (520 +35) - 11/3.3) + 25)/5.5"
+            \\    ./Calculator.exe "((10 * (520 +35) - 11/3.3) + 25)/5.5"
             \\
             \\
             , .{},
         );
         return e;
     };
-    try writer.print("{d}\n", .{ try calculate(buffer[0 .. len]) });
+    print("{d}\n", .{ try calculate(buffer.items) });
 }
 
-pub fn removeWhitespace(str: []u8) usize {
+pub fn removeWhitespace(str: *Str) !void {
+    var s = str.items;
     var l: usize = 0;
-    var r: usize = 0;
-    while (r < str.len) : (r += 1) {
-        if (!std.ascii.isWhitespace(str[r])) {
-            str[l] = str[r];
+    var r = Rng(usize).init(0, s.len);
+    while (r.next()) |i| {
+        if (!std.ascii.isWhitespace(s[i])) {
+            s[l] = s[i];
             l += 1;
         }
     }
-    return l;
+    try str.resize(l);
 }
 
-pub fn removeOverlapedFloatingPoint(str: []u8) usize {
-    var b: bool = false;
+pub fn removeOverlapedFloatingPoint(str: *Str) !void {
+    var s = str.items;
     var l: usize = 0;
-    var r: usize = 0;
-    while (r < str.len) : (r += 1) {
-        if (str[r] == '.') {
+    var r = Rng(usize).init(0, s.len);
+    var b: bool = false;
+    while (r.next()) |i| {
+        if (s[i] == '.') {
             if (b) { continue; }
             b = true;
-        } else if (std.mem.indexOfScalar(u8, operators, str[r]) != null) {
+        } else if (std.mem.indexOfScalar(u8, Operators, s[i]) != null) {
             b = false;
         }
-        str[l] = str[r];
+        s[l] = s[i];
         l += 1;
     }
-    return l;
+    try str.resize(l);
 }
 
 pub fn validation(formula: []const u8) !void {
     // allow character check
     for (0 .. formula.len) |i| {
-        if (std.mem.indexOfScalar(u8, allowChars, formula[i]) == null) {
+        if (std.mem.indexOfScalar(u8, AllowChars, formula[i]) == null) {
             return error.NotAllowedCharacterIncluded;
         }
     }
@@ -93,34 +100,36 @@ pub fn validation(formula: []const u8) !void {
     for (1 .. formula.len) |i| {
         switch (formula[i - 1]) {
             '(' => if (formula[i] == ')' or
-                    std.mem.indexOfScalar(u8, operators, formula[i]) != null) {
+                    std.mem.indexOfScalar(u8, Operators, formula[i]) != null) {
                 return error.AbnormalFormula;
             },
             ')' => if (formula[i] == '(' or
-                    std.mem.indexOfScalar(u8, digits, formula[i]) != null) {
+                    std.mem.indexOfScalar(u8, Digits, formula[i]) != null) {
                 return error.AbnormalFormula;
             },
-            else => if (std.mem.indexOfScalar(u8, digits, formula[i - 1]) != null) {
-                if (formula[i] == '(') { return error.AbnormalFormula; }
-            } else if (std.mem.indexOfScalar(u8, operators, formula[i - 1]) != null) {
+            else => if (std.mem.indexOfScalar(u8, Digits, formula[i - 1]) != null) {
+                if (formula[i] == '(') {
+                    return error.AbnormalFormula;
+                }
+            } else if (std.mem.indexOfScalar(u8, Operators, formula[i - 1]) != null) {
                 if (formula[i] == ')' or
-                        std.mem.indexOfScalar(u8, operators, formula[i]) != null) {
+                        std.mem.indexOfScalar(u8, Operators, formula[i]) != null) {
                     return error.AbnormalFormula;
                 }
             },
         }
     }
     if (formula.len == 0 or
-            std.mem.indexOfScalar(u8, operators, formula[0]) != null or
-            std.mem.indexOfScalar(u8, operators, formula[formula.len - 1]) != null) {
+            std.mem.indexOfScalar(u8, Operators, formula[0]) != null or
+            std.mem.indexOfScalar(u8, Operators, formula[formula.len - 1]) != null) {
         return error.AbnormalFormula;
     }
 }
 
 pub fn calculate(formula: []const u8) !f64 {
     // split elements
-    var operands = std.ArrayList(f64).init(allocator); defer operands.deinit();
-    var operators_ = std.ArrayList(u8).init(allocator); defer operators_.deinit();
+    var operands = Vec(f64).init(Allocator); defer operands.deinit();
+    var operators = Vec(u8).init(Allocator); defer operators.deinit();
     var bracketStack: i32 = 0;
     var l: usize = undefined;
     var l2: ?usize = null;
@@ -133,14 +142,14 @@ pub fn calculate(formula: []const u8) !f64 {
             ')' => {
                 bracketStack -= 1;
                 if (bracketStack == 0) {
-                    try operands.append(try calculate(formula[l..i]));
+                    try operands.push(try calculate(formula[l .. i]));
                 }
             },
             else => if (bracketStack == 0) {
-                if (std.mem.indexOfScalar(u8, operators, formula[i]) != null) {
-                    try operators_.append(formula[i]);
+                if (std.mem.indexOfScalar(u8, Operators, formula[i]) != null) {
+                    try operators.push(formula[i]);
                     if (l2 != null) {
-                        try operands.append(try std.fmt.parseFloat(f64, formula[l2.? .. i]));
+                        try operands.push(try std.fmt.parseFloat(f64, formula[l2.? .. i]));
                         l2 = null;
                     }
                 } else if (l2 == null) {
@@ -148,7 +157,7 @@ pub fn calculate(formula: []const u8) !f64 {
                 }
                 if (i == formula.len - 1) {
                     if (l2 != null) {
-                        try operands.append(try std.fmt.parseFloat(f64, formula[l2.? .. ]));
+                        try operands.push(try std.fmt.parseFloat(f64, formula[l2.? .. ]));
                         l2 = null;
                     }
                 }
@@ -158,8 +167,8 @@ pub fn calculate(formula: []const u8) !f64 {
 
     // *, /
     var i: usize = 0;
-    while (i < operators_.items.len) {
-        switch (operators_.items[i]) {
+    while (i < operators.items.len) {
+        switch (operators.items[i]) {
             '*' => operands.items[i] *= operands.items[i + 1],
             '/' => operands.items[i] /= operands.items[i + 1],
             else => {
@@ -167,14 +176,14 @@ pub fn calculate(formula: []const u8) !f64 {
                 continue;
             },
         }
-        _ = operands.orderedRemove(i + 1);
-        _ = operators_.orderedRemove(i);
+        _ = try operands.remove(i + 1);
+        _ = try operators.remove(i);
     }
 
     // +, -
     i = 0;
-    while (i < operators_.items.len) {
-        switch (operators_.items[i]) {
+    while (i < operators.items.len) {
+        switch (operators.items[i]) {
             '+' => operands.items[i] += operands.items[i + 1],
             '-' => operands.items[i] -= operands.items[i + 1],
             else => {
@@ -182,8 +191,9 @@ pub fn calculate(formula: []const u8) !f64 {
                 continue;
             },
         }
-        _ = operands.orderedRemove(i + 1);
-        _ = operators_.orderedRemove(i);
+        _ = try operands.remove(i + 1);
+        _ = try operators.remove(i);
     }
-    return operands.items[0];
+
+    return operands.back() orelse error.NothingResults;
 }

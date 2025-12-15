@@ -65,6 +65,9 @@ pub fn build(b: *std.Build) void {
         .root_module = exe_mod,
     });
 
+    const zl = b.dependency("zig_libraries", .{});
+    exe.root_module.addImport("zig_libraries", zl.module("zig_libraries"));
+
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
     // step when running `zig build`).
