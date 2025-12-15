@@ -55,14 +55,6 @@ zig build
 ./zig-out/bin/Calculator "1 + 2 * 3 / 1.24"
 ```
 
-## 🧹 Cleanup
-
-빌드 과정에서 생성된 파일들을 제거하려면 다음 명령어를 사용합니다.
-
-```bash
-zig build clean
-```
-
 ## 🔗 Related Links
 
 - 사용된 라이브러리: [TinyProbe/zig-libraries](https://github.com/TinyProbe/zig-libraries)
