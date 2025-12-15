@@ -60,6 +60,6 @@ zig build
 - 사용된 라이브러리: [TinyProbe/zig-libraries](https://github.com/TinyProbe/zig-libraries)
 - Zig 언어 공식 웹사이트: [ziglang](https://ziglang.org/)
 
-## License
+## 📄 License
 
 이 프로젝트는 MIT 라이선스를 따릅니다.
