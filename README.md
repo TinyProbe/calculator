@@ -19,7 +19,7 @@ Zig 언어로 작성된 간단한 커맨드 라인 인터페이스(CLI) 기반�
 이 프로젝트는 zig-libraries라는 서드파티 라이브러리에 의존합니다. 다음 단계에
 따라 의존성을 추가하고 프로젝트를 빌드하세요.
 
-### 1. 의존성 패치
+#### 1. 의존성 패치
 
 프로젝트의 루트 디렉터리에서 zig fetch 명령을 실행하여 zig-libraries를
 다운로드하고 build.zig.zon 파일에 추가합니다.
@@ -28,7 +28,7 @@ Zig 언어로 작성된 간단한 커맨드 라인 인터페이스(CLI) 기반�
 zig fetch --save git+https://github.com/TinyProbe/zig-libraries
 ```
 
-### 2. 프로젝트 빌드
+#### 2. 프로젝트 빌드
 
 ```bash
 zig build
@@ -59,3 +59,7 @@ zig build
 
 - 사용된 라이브러리: [TinyProbe/zig-libraries](https://github.com/TinyProbe/zig-libraries)
 - Zig 언어 공식 웹사이트: [ziglang](https://ziglang.org/)
+
+## License
+
+이 프로젝트는 MIT 라이선스를 따릅니다.
